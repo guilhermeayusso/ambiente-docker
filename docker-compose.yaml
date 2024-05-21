@@ -1,0 +1,85 @@
+
+# spring-boot-docker/docker-compose.yml
+networks:
+  microservice-network:
+    driver: bridge
+services:
+  mysql-service-pedidos:
+    image: mysql:5.7
+    container_name: db_pedidos
+    networks:
+      - microservice-network
+    restart: always
+    ports:
+      - "3309:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=fiap@123
+      - MYSQL_DATABASE=pedidos
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+  mysql-service-produtos:
+    image: mysql:5.7
+    container_name: db_produtos
+    networks:
+      - microservice-network
+    restart: always
+    ports:
+      - "3308:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=fiap@123
+      - MYSQL_DATABASE=produtos
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+  mysql-service-clientes:
+    image: mysql:5.7
+    container_name: db_clientes
+    networks:
+      - microservice-network
+    restart: always
+    ports:
+      - "3307:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=fiap@123
+      - MYSQL_DATABASE=clientes
+    healthcheck:
+      test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
+      timeout: 20s
+      retries: 10
+  web-service-produtos:
+    build:
+      context: ${SERVICE_PRODUTOS_PATH}
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8080"
+    networks:
+      - microservice-network
+    depends_on:
+      mysql-service-produtos:
+        condition: service_healthy
+  web-service-clientes:
+    build:
+      context: ${SERVICE_CLIENTES_PATH}
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8080"
+    networks:
+      - microservice-network
+    depends_on:
+      mysql-service-clientes:
+        condition: service_healthy
+  
+  web-service-pedidos:
+    build:
+      context: ${SERVICE_PEDIDOS_PATH}
+      dockerfile: Dockerfile
+    ports:
+      - "8083:8080"
+    networks:
+      - microservice-network
+    depends_on:
+      mysql-service-pedidos:
+        condition: service_healthy
